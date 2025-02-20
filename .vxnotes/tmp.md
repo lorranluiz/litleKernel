@@ -1,0 +1,1 @@
+qemu-system-x86_64 -machine pc -kernel build-pc-x86-64-test/lk.elf -display sdl -vga std -serial stdio

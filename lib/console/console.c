@@ -84,6 +84,8 @@ static int cmd_help(int argc, const console_cmd_args *argv);
 static int cmd_help_panic(int argc, const console_cmd_args *argv);
 static int cmd_echo(int argc, const console_cmd_args *argv);
 static int cmd_test(int argc, const console_cmd_args *argv);
+static int cmd_clear(int argc, const console_cmd_args *argv); // Declaration of cmd_clear
+static int cmd_shutdown(int argc, const console_cmd_args *argv); // Declaration of cmd_shutdown
 #if CONSOLE_ENABLE_HISTORY
 static int cmd_history(int argc, const console_cmd_args *argv);
 #endif
@@ -94,7 +96,9 @@ static int cmd_repeat(int argc, const console_cmd_args *argv);
 STATIC_COMMAND_START
 STATIC_COMMAND("help", "this list", &cmd_help)
 STATIC_COMMAND_MASKED("help", "this list", &cmd_help_panic, CMD_AVAIL_PANIC)
-STATIC_COMMAND("echo", NULL, &cmd_echo)
+STATIC_COMMAND("echo", "echo the input", &cmd_echo) // Adiciona o comando echo
+STATIC_COMMAND("clear", "clear the screen", &cmd_clear) // Adiciona o comando clear
+STATIC_COMMAND("shutdown", "shutdown the system", &cmd_shutdown) // Adiciona o comando shutdown
 #if LK_DEBUGLEVEL > 1
 STATIC_COMMAND("test", "test the command processor", &cmd_test)
 #if CONSOLE_ENABLE_HISTORY
@@ -594,7 +598,7 @@ static status_t command_loop(console_t *con, int (*get_line)(const char **, void
         // read a new line if it hadn't been split previously and passed back from tokenize_command
         if (continuebuffer == NULL) {
             if (showprompt)
-                fputs("] ", stdout);
+                fputs("hwOS> ", stdout);
 
             int len = get_line(&buffer, get_line_cookie);
             if (len < 0)
@@ -846,9 +850,25 @@ static int cmd_help_panic(int argc, const console_cmd_args *argv) {
 }
 
 static int cmd_echo(int argc, const console_cmd_args *argv) {
-    if (argc > 1)
-        console_get_current()->echo = argv[1].b;
-    return NO_ERROR;
+    for (int i = 1; i < argc; i++) {
+        printf("%s ", argv[i].str);
+    }
+    printf("\n");
+    return 0;
+}
+
+static int cmd_clear(int argc, const console_cmd_args *argv) {
+    // Código para limpar a tela
+    printf("\033[2J\033[H");
+    fflush(stdout); // Adiciona flush para garantir que a sequência de escape seja enviada imediatamente
+    return 0;
+}
+
+static int cmd_shutdown(int argc, const console_cmd_args *argv) {
+    // Código para desligar o sistema (fechar o QEMU)
+    printf("Shutting down...\n");
+    fflush(stdout);
+    return 0; // Adiciona um retorno apropriado
 }
 
 static void read_line_panic(char *buffer, const size_t len, FILE *panic_fd) {
